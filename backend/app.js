@@ -2,9 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const connectDB = require('./config/database');
 const corsMiddleware = require('./middleware/cors');
-const programRoutes = require('./routes/programs');
-
 const app = express();
+const programRoutes = require('./routes/programsRoutes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+require('dotenv').config();
 
 // Connect to db
 connectDB();
@@ -16,5 +18,7 @@ app.use(corsMiddleware);
 
 // Routes
 app.use('/api/programs', programRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 module.exports = app;
