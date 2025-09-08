@@ -1,4 +1,5 @@
 const Advertisement = require('../models/advertisement');
+const Agent = require('../models/agent');
 
 const createAdvertisement = async (req, res) => {
   try {
@@ -15,7 +16,7 @@ const createAdvertisement = async (req, res) => {
 	  phoneNumber,
     } = req.body;
 
-	if (!program || !rating || !pricePerMinute || !duration || !totalPrice || 
+    if (!program || !rating || !pricePerMinute || !duration || !totalPrice || 
         !date || !organizationName || !contactPerson || !bankDetails || !phoneNumber) {
       return res.status(400).json({
         message: 'All fields are required'
@@ -69,8 +70,13 @@ const getAdvertisements = async (req, res) => {
   try {
     const pageSize = +req.query.pagesize || 10;
     const currentPage = +req.query.page || 1;
+    const statusFilter = req.query.status;
 
-    const query = Advertisement.find();
+    let query = Advertisement.find();
+    
+    if (statusFilter) {
+      query = query.where('status').equals(statusFilter);
+    }
 
     if (pageSize && currentPage) {
       query
@@ -80,13 +86,28 @@ const getAdvertisements = async (req, res) => {
 
     const advertisements = await query
       .populate('userId', 'email') 
-      .sort({ createdAt: -1 });
+      .populate('agentId', 'name commissionPercentage') 
+      .sort({ createdAt: -1 }); 
 
-    const count = await Advertisement.countDocuments();
+    const advertisementsWithEarnings = advertisements.map(ad => {
+      const adObj = ad.toObject();
+      if (adObj.agentId && adObj.agentId.commissionPercentage) {
+        adObj.agentEarnings = (adObj.totalPrice * adObj.agentId.commissionPercentage) / 100;
+        adObj.agentName = adObj.agentId.name;
+        adObj.agentCommission = adObj.agentId.commissionPercentage;
+      }
+      return adObj;
+    });
+
+    const countQuery = statusFilter ? 
+      Advertisement.countDocuments({ status: statusFilter }) :
+      Advertisement.countDocuments();
+    
+    const count = await countQuery;
 
     res.status(200).json({
       message: 'Advertisements fetched successfully',
-      advertisements,
+      advertisements: advertisementsWithEarnings,
       maxAdvertisements: count
     });
 
@@ -104,7 +125,7 @@ const getUserAdvertisements = async (req, res) => {
     const pageSize = +req.query.pagesize || 10;
     const currentPage = +req.query.page || 1;
 
-    const query = Advertisement.find({ userId: req.user.id }); 
+    const query = Advertisement.find({ userId: req.user.id });
 
     if (pageSize && currentPage) {
       query
@@ -112,8 +133,11 @@ const getUserAdvertisements = async (req, res) => {
         .limit(pageSize);
     }
 
-    const advertisements = await query.sort({ createdAt: -1 });
-    const count = await Advertisement.countDocuments({ userId: req.user.id }); 
+    const advertisements = await query
+      .populate('agentId', 'name commissionPercentage')
+      .sort({ createdAt: -1 });
+    
+    const count = await Advertisement.countDocuments({ userId: req.user.id });
 
     res.status(200).json({
       message: 'User advertisements fetched successfully',
@@ -168,6 +192,45 @@ const updateAdvertisementStatus = async (req, res) => {
   }
 };
 
+const assignAgentToAdvertisement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { agentId } = req.body;
+
+    const agent = await Agent.findById(agentId);
+    if (!agent) {
+      return res.status(404).json({
+        message: 'Agent not found'
+      });
+    }
+
+    const advertisement = await Advertisement.findById(id);
+    if (!advertisement) {
+      return res.status(404).json({
+        message: 'Advertisement not found'
+      });
+    }
+
+    advertisement.agentId = agentId;
+    advertisement.updatedAt = Date.now();
+    
+    const updatedAdvertisement = await advertisement.save();
+    await updatedAdvertisement.populate('agentId', 'name commissionPercentage');
+
+    res.status(200).json({
+      message: 'Agent assigned to advertisement successfully',
+      advertisement: updatedAdvertisement
+    });
+
+  } catch (error) {
+    console.error('Error assigning agent to advertisement:', error);
+    res.status(500).json({
+      message: 'Failed to assign agent to advertisement',
+      error: error.message
+    });
+  }
+};
+
 const deleteAdvertisement = async (req, res) => {
   try {
     const { id } = req.params;
@@ -197,5 +260,6 @@ module.exports = {
   getAdvertisements,
   getUserAdvertisements,
   updateAdvertisementStatus,
+  assignAgentToAdvertisement,
   deleteAdvertisement
 };

@@ -27,6 +27,14 @@ const advertisementSchema = mongoose.Schema({
     enum: ['pending', 'approved', 'rejected', 'completed'],
     default: 'pending',
   },
+  
+  // NEW: Agent reference
+  agentId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Agent', 
+    required: false // Optional - not all advertisements need to have an agent
+  },
+  
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

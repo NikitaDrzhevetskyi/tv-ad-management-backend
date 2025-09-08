@@ -7,6 +7,7 @@ const programRoutes = require('./routes/programsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const advertisementRoutes = require('./routes/advertisementRoutes');
+const agentRoutes = require('./routes/agentRoutes');
 require('dotenv').config();
 
 // Connect to db
@@ -22,5 +23,6 @@ app.use('/api/programs', programRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/advertisements', advertisementRoutes);
+app.use('/api/agents', agentRoutes);
 
 module.exports = app;
