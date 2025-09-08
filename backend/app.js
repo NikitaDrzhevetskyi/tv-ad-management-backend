@@ -6,6 +6,7 @@ const app = express();
 const programRoutes = require('./routes/programsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const advertisementRoutes = require('./routes/advertisementRoutes');
 require('dotenv').config();
 
 // Connect to db
@@ -20,5 +21,6 @@ app.use(corsMiddleware);
 app.use('/api/programs', programRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/advertisements', advertisementRoutes);
 
 module.exports = app;
