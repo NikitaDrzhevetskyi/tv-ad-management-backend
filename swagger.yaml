@@ -1,0 +1,1167 @@
+openapi: 3.0.0
+info:
+  title: TV Advertising Management API
+  description: |
+    A comprehensive API for managing TV advertising operations including programs, advertisements, agents, and client management.
+    
+    **Business Process:**
+    TV company's commercial department manages advertising cost accounting. Clients request ad placements in specific TV programs on specific dates. Each ad has duration, and costs are determined by program ratings and commercial considerations.
+    
+    **Test Credentials:**
+    - Admin: vfrovfro@gmail.com / zxcv1234
+    - User: test1@gmail.com / zxcv1234
+  version: 1.0.0
+  contact:
+    name: TV Advertising Management System
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # User Schemas
+    User:
+      type: object
+      required:
+        - email
+        - password
+        - role
+      properties:
+        _id:
+          type: string
+          description: User ID
+        email:
+          type: string
+          format: email
+          description: User email address
+        password:
+          type: string
+          description: Hashed password
+        role:
+          type: string
+          enum: [admin, user]
+          description: User role
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - password
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          example: password123
+        role:
+          type: string
+          enum: [admin, user]
+          example: user
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: vfrovfro@gmail.com
+        password:
+          type: string
+          example: zxcv1234
+
+    # Program Schemas
+    Program:
+      type: object
+      required:
+        - name
+        - rating
+        - costPeerMinute
+      properties:
+        _id:
+          type: string
+          description: Program ID
+        name:
+          type: string
+          description: Program name
+          example: "Evening News"
+        rating:
+          type: number
+          description: Program rating
+          example: 4.5
+        costPeerMinute:
+          type: number
+          description: Cost per minute for advertising
+          example: 150.0
+
+    ProgramInput:
+      type: object
+      required:
+        - name
+        - rating
+        - costPeerMinute
+      properties:
+        name:
+          type: string
+          example: "Morning Show"
+        rating:
+          type: number
+          example: 3.8
+        costPeerMinute:
+          type: number
+          example: 120.0
+
+    ProgramUpdate:
+      type: object
+      required:
+        - id
+        - name
+        - costPeerMinute
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: "Updated Program Name"
+        costPeerMinute:
+          type: number
+          example: 180.0
+
+    # Agent Schemas
+    Agent:
+      type: object
+      required:
+        - name
+        - commissionPercentage
+      properties:
+        _id:
+          type: string
+          description: Agent ID
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Agent name
+          example: "John Smith"
+        commissionPercentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Commission percentage
+          example: 15.5
+        totalDealValue:
+          type: number
+          description: Total value of deals handled by agent
+          example: 10000.0
+        totalEarned:
+          type: number
+          description: Total commission earned
+          example: 1550.0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AgentInput:
+      type: object
+      required:
+        - name
+        - commissionPercentage
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "Jane Doe"
+        commissionPercentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 12.0
+
+    # Advertisement Schemas
+    Advertisement:
+      type: object
+      required:
+        - program
+        - rating
+        - pricePerMinute
+        - duration
+        - totalPrice
+        - date
+        - organizationName
+        - contactPerson
+        - bankDetails
+        - phoneNumber
+      properties:
+        _id:
+          type: string
+          description: Advertisement ID
+        program:
+          type: string
+          description: Program name
+          example: "Evening News"
+        rating:
+          type: number
+          description: Program rating
+          example: 4.5
+        pricePerMinute:
+          type: number
+          description: Price per minute
+          example: 150.0
+        duration:
+          type: number
+          minimum: 1
+          description: Advertisement duration in minutes
+          example: 2
+        totalPrice:
+          type: number
+          description: Total price for the advertisement
+          example: 300.0
+        date:
+          type: string
+          description: Advertisement date
+          example: "2025-01-15"
+        organizationName:
+          type: string
+          description: Client organization name
+          example: "ABC Corporation"
+        contactPerson:
+          type: string
+          description: Contact person name
+          example: "Michael Johnson"
+        phoneNumber:
+          type: string
+          pattern: '^\+?[0-9]{7,15}$'
+          description: Contact phone number
+          example: "+1234567890"
+        bankDetails:
+          type: string
+          description: Banking details
+          example: "Bank: First National, Account: 123456789"
+        status:
+          type: string
+          enum: [pending, approved, rejected, completed]
+          default: pending
+          description: Advertisement status
+        agentId:
+          type: string
+          description: Assigned agent ID (optional)
+        agentName:
+          type: string
+          description: Agent name (populated)
+        agentCommission:
+          type: number
+          description: Agent commission percentage
+        agentEarnings:
+          type: number
+          description: Agent earnings from this advertisement
+        userId:
+          type: string
+          description: User who created the advertisement
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdvertisementInput:
+      type: object
+      required:
+        - program
+        - rating
+        - pricePerMinute
+        - duration
+        - totalPrice
+        - date
+        - organizationName
+        - contactPerson
+        - bankDetails
+        - phoneNumber
+      properties:
+        program:
+          type: string
+          example: "Morning Show"
+        rating:
+          type: number
+          example: 3.8
+        pricePerMinute:
+          type: number
+          example: 120.0
+        duration:
+          type: number
+          minimum: 1
+          example: 1
+        totalPrice:
+          type: number
+          example: 120.0
+        date:
+          type: string
+          example: "2025-02-01"
+        organizationName:
+          type: string
+          example: "XYZ Company"
+        contactPerson:
+          type: string
+          example: "Sarah Wilson"
+        phoneNumber:
+          type: string
+          example: "+1987654321"
+        bankDetails:
+          type: string
+          example: "Bank: Second National, Account: 987654321"
+
+    StatusUpdate:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, rejected, completed]
+          example: "approved"
+
+    AgentAssignment:
+      type: object
+      required:
+        - agentId
+      properties:
+        agentId:
+          type: string
+          example: "60f7b3b3b3b3b3b3b3b3b3b3"
+
+    # Response Schemas
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    ProgramsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Programs fetched successfully!"
+        programs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Program'
+        maxPrograms:
+          type: integer
+          example: 50
+
+    AgentsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Agents fetched successfully"
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agent'
+        maxAgents:
+          type: integer
+          example: 25
+
+    AdvertisementsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Advertisements fetched successfully"
+        advertisements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Advertisement'
+        maxAdvertisements:
+          type: integer
+          example: 100
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Error message"
+        error:
+          type: string
+          example: "Detailed error information"
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with email, password, and role
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "User registered with email user@example.com"
+        '400':
+          description: Bad request - missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # User Endpoints
+  /users/admin:
+    get:
+      tags:
+        - Users
+      summary: Admin access test
+      description: Test endpoint for admin role verification
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Admin access granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Welcome Admin"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+
+  /users/user:
+    get:
+      tags:
+        - Users
+      summary: User access test
+      description: Test endpoint for user/admin role verification
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User access granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Welcome User"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+
+  # Program Endpoints
+  /programs:
+    get:
+      tags:
+        - Programs
+      summary: Get all programs
+      description: Retrieve paginated list of TV programs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: pagesize
+          in: query
+          description: Number of programs per page
+          schema:
+            type: integer
+            default: 5
+            example: 10
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+            example: 1
+      responses:
+        '200':
+          description: Programs fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramsResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Programs
+      summary: Create a new program
+      description: Add a new TV program (admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramInput'
+      responses:
+        '201':
+          description: Program created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Program added successfully"
+                  programId:
+                    type: string
+                    example: "60f7b3b3b3b3b3b3b3b3b3b3"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /programs/{id}:
+    put:
+      tags:
+        - Programs
+      summary: Update a program
+      description: Update an existing TV program (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Program ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramUpdate'
+      responses:
+        '200':
+          description: Program updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Update successfull!"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Program not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags:
+        - Programs
+      summary: Delete a program
+      description: Remove a TV program (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Program ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Program deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Program deleted successfully!"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Program not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+
+  # Agent Endpoints
+  /agents:
+    get:
+      tags:
+        - Agents
+      summary: Get all agents
+      description: Retrieve paginated list of agents with earnings calculations (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: pagesize
+          in: query
+          description: Number of agents per page
+          schema:
+            type: integer
+            default: 10
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Agents fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '500':
+          description: Internal server error
+
+    post:
+      tags:
+        - Agents
+      summary: Create a new agent
+      description: Add a new agent (admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInput'
+      responses:
+        '201':
+          description: Agent created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Agent created successfully"
+                  agent:
+                    $ref: '#/components/schemas/Agent'
+        '400':
+          description: Bad request - validation error or duplicate name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '500':
+          description: Internal server error
+
+  /agents/{id}:
+    get:
+      tags:
+        - Agents
+      summary: Get agent by ID
+      description: Retrieve a specific agent with earnings calculations (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Agent fetched successfully"
+                  agent:
+                    $ref: '#/components/schemas/Agent'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Agent not found
+        '500':
+          description: Internal server error
+
+    put:
+      tags:
+        - Agents
+      summary: Update an agent
+      description: Update an existing agent (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInput'
+      responses:
+        '200':
+          description: Agent updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Agent updated successfully"
+                  agent:
+                    $ref: '#/components/schemas/Agent'
+        '400':
+          description: Bad request - validation error or duplicate name
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Agent not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags:
+        - Agents
+      summary: Delete an agent
+      description: Remove an agent (admin only) - only if no associated advertisements exist
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Agent ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Agent deleted successfully"
+        '400':
+          description: Cannot delete agent with existing advertisements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Cannot delete agent with existing advertisements. Please reassign or remove associated advertisements first."
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Agent not found
+        '500':
+          description: Internal server error
+
+  # Advertisement Endpoints
+  /advertisements:
+    get:
+      tags:
+        - Advertisements
+      summary: Get all advertisements
+      description: Retrieve paginated list of all advertisements (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: pagesize
+          in: query
+          description: Number of advertisements per page
+          schema:
+            type: integer
+            default: 10
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: status
+          in: query
+          description: Filter by advertisement status
+          schema:
+            type: string
+            enum: [pending, approved, rejected, completed]
+      responses:
+        '200':
+          description: Advertisements fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvertisementsResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '500':
+          description: Internal server error
+
+    post:
+      tags:
+        - Advertisements
+      summary: Create a new advertisement order
+      description: Create a new advertisement order
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvertisementInput'
+      responses:
+        '201':
+          description: Advertisement order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Advertisement order created successfully"
+                  advertisement:
+                    $ref: '#/components/schemas/Advertisement'
+        '400':
+          description: Bad request - validation error or price calculation mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_fields:
+                  value:
+                    message: "All fields are required"
+                duration_error:
+                  value:
+                    message: "Duration must be at least 1 minute"
+                price_mismatch:
+                  value:
+                    message: "Total price calculation mismatch"
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /advertisements/my:
+    get:
+      tags:
+        - Advertisements
+      summary: Get user's advertisements
+      description: Retrieve paginated list of current user's advertisements
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: pagesize
+          in: query
+          description: Number of advertisements per page
+          schema:
+            type: integer
+            default: 10
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: User advertisements fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User advertisements fetched successfully"
+                  advertisements:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Advertisement'
+                  maxAdvertisements:
+                    type: integer
+                    example: 15
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /advertisements/{id}/status:
+    put:
+      tags:
+        - Advertisements
+      summary: Update advertisement status
+      description: Update the status of an advertisement (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Advertisement ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdate'
+      responses:
+        '200':
+          description: Advertisement status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Advertisement status updated successfully"
+                  advertisement:
+                    $ref: '#/components/schemas/Advertisement'
+        '400':
+          description: Invalid status value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Advertisement not found
+        '500':
+          description: Internal server error
+
+  /advertisements/{id}/agent:
+    put:
+      tags:
+        - Advertisements
+      summary: Assign agent to advertisement
+      description: Assign an agent to handle an advertisement (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Advertisement ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentAssignment'
+      responses:
+        '200':
+          description: Agent assigned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Agent assigned to advertisement successfully"
+                  advertisement:
+                    $ref: '#/components/schemas/Advertisement'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Advertisement or Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+
+  /advertisements/{id}:
+    delete:
+      tags:
+        - Advertisements
+      summary: Delete an advertisement
+      description: Remove an advertisement (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Advertisement ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Advertisement deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Advertisement deleted successfully"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied - admin only
+        '404':
+          description: Advertisement not found
+        '500':
+          description: Internal server error
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Users
+    description: User role verification endpoints
+  - name: Programs
+    description: TV program management
+  - name: Agents
+    description: Agent management and commission tracking
+  - name: Advertisements
+    description: Advertisement order management and client relations
